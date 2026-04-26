@@ -7,27 +7,29 @@ using pii = pair<double,double>;
 vector<pii> points;
 int n;
 
-// ================= GENERATOR =================
-void generate_input(int N, int seed = 42) {
+void generate_input(int N, int seed = 42) 
+{
     n = N;
     points.resize(n);
 
     mt19937 rng(seed);
     uniform_real_distribution<double> dist(0, 1000);
 
-    for(int i = 0; i < n; i++) {
+    for(int i = 0; i < n; i++) 
+    {
         points[i] = {dist(rng), dist(rng)};
     }
 }
 
-// ================= DIST =================
-double dist(int i, int j) {
+double dist(int i, int j) 
+{
     double dx = points[i].first - points[j].first;
     double dy = points[i].second - points[j].second;
     return sqrt(dx*dx + dy*dy);
 }
 
-double total_cost(const vector<int>& path) {
+double total_cost(const vector<int>& path) 
+{
     double cost = 0;
     for(int i = 0; i < n - 1; i++)
         cost += dist(path[i], path[i+1]);
@@ -35,8 +37,9 @@ double total_cost(const vector<int>& path) {
     return cost;
 }
 
-// ================= GREEDY =================
-vector<int> greedy() {
+// greedy
+vector<int> greedy() 
+{
     vector<bool> visited(n, false);
     vector<int> path;
 
@@ -44,14 +47,18 @@ vector<int> greedy() {
     path.push_back(cur);
     visited[cur] = true;
 
-    for(int step = 1; step < n; step++) {
+    for(int step = 1; step < n; step++) 
+    {
         double best = 1e18;
         int next = -1;
 
-        for(int j = 0; j < n; j++) {
-            if(!visited[j]) {
+        for(int j = 0; j < n; j++) 
+        {
+            if(!visited[j]) 
+            {
                 double d = dist(cur, j);
-                if(d < best) {
+                if(d < best) 
+                {
                     best = d;
                     next = j;
                 }
@@ -66,15 +73,19 @@ vector<int> greedy() {
     return path;
 }
 
-// ================= 2-OPT =================
-void two_opt(vector<int>& path) {
+// 2opt 
+void two_opt(vector<int>& path) 
+{
     bool improved = true;
 
-    while(improved) {
+    while(improved) 
+    {
         improved = false;
 
-        for(int i = 1; i < n - 2; i++) {
-            for(int j = i + 1; j < n - 1; j++) {
+        for(int i = 1; i < n - 2; i++) 
+        {
+            for(int j = i + 1; j < n - 1; j++) 
+            {
 
                 double before =
                     dist(path[i-1], path[i]) +
@@ -84,7 +95,8 @@ void two_opt(vector<int>& path) {
                     dist(path[i-1], path[j]) +
                     dist(path[i], path[j+1]);
 
-                if(after < before) {
+                if(after < before) 
+                {
                     reverse(path.begin() + i, path.begin() + j + 1);
                     improved = true;
                 }
@@ -93,8 +105,9 @@ void two_opt(vector<int>& path) {
     }
 }
 
-// ================= MULTI-START =================
-vector<int> multi_start(int iterations) {
+// multistart 
+vector<int> multi_start(int iterations) 
+{
     vector<int> best_path;
     double best_cost = 1e18;
 
@@ -103,7 +116,8 @@ vector<int> multi_start(int iterations) {
 
     mt19937 rng(42);
 
-    for(int it = 0; it < iterations; it++) {
+    for(int it = 0; it < iterations; it++) 
+    {
         shuffle(base.begin(), base.end(), rng);
 
         vector<int> path = base;
@@ -111,7 +125,8 @@ vector<int> multi_start(int iterations) {
 
         double cost = total_cost(path);
 
-        if(cost < best_cost) {
+        if(cost < best_cost) 
+        {
             best_cost = cost;
             best_path = path;
         }
@@ -120,13 +135,15 @@ vector<int> multi_start(int iterations) {
     return best_path;
 }
 
-// ================= MEMORY =================
-size_t get_memory_usage() {
+// memory
+size_t get_memory_usage() 
+{
     return sizeof(points) + sizeof(double)*points.size()*2;
 }
 
-// ================= RUN =================
-void run(string name, function<vector<int>()> solver) {
+// run 
+void run(string name, function<vector<int>()> solver) 
+{
     auto start = chrono::high_resolution_clock::now();
 
     vector<int> path = solver();
@@ -147,41 +164,48 @@ void run(string name, function<vector<int>()> solver) {
 }
 
 
-// ================= MAIN =================
-int main(int argc, char* argv[]) {
+
+int main(int argc, char* argv[]) 
+{
     ios::sync_with_stdio(false);
     cin.tie(nullptr);
 
-    // ===== MODE =====
     // ./a.out gen 500
     // ./a.out < input.txt
 
-    if(argc >= 2 && string(argv[1]) == "gen") {
+    if(argc >= 2 && string(argv[1]) == "gen")
+    {
         int N = 500;
         if(argc >= 3) N = stoi(argv[2]);
 
         generate_input(N);
 
         cout << "Generated " << N << " points\n";
-    } else {
+    } 
+    else 
+    {
         cin >> n;
         points.resize(n);
-        for(int i = 0; i < n; i++) {
+        for(int i = 0; i < n; i++) 
+        {
             cin >> points[i].first >> points[i].second;
         }
     }
 
-    run("Greedy", []() {
+    run("Greedy", []() 
+    {
         return greedy();
     });
 
-    run("Greedy + 2-opt", []() {
+    run("Greedy + 2-opt", []() 
+    {
         auto p = greedy();
         two_opt(p);
         return p;
     });
 
-    run("Multi-start (2-opt)", []() {
+    run("Multi-start (2-opt)", []() 
+    {
         return multi_start(50);
     });
 
