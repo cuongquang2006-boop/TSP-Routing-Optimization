@@ -188,17 +188,42 @@ void run(string name, function<vector<int>()> solver)
     cout << "============================\n";
     cout << "Algorithm: " << name << "\n";
 
+    const int ITER = 1000;
+    vector<int> warm = solver();
     auto start = chrono::high_resolution_clock::now();
-    vector<int> path = solver();
-    auto end = chrono::high_resolution_clock::now();
 
+    vector<int> path;
+    for(int i = 0; i < ITER; i++) 
+    {
+        path = solver();
+    }
+    auto end = chrono::high_resolution_clock::now();
     double cost = total_cost(path);
-    auto time = chrono::duration_cast<chrono::milliseconds>(end - start);
+    auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
+    double avg_time = (double)duration.count() / ITER;
 
     cout << fixed << setprecision(2);
     cout << "Cost: " << cost << "\n";
-    cout << "Time(ms): " << time.count() << "\n";
+    cout << "Avg Time (us): " << avg_time << "\n";
+    cout << "Path: ";
+    for(int x : path) cout << x << " ";
+    cout << "\n\n";
+}
 
+void run_bb()
+{
+    cout << "============================\n";
+    cout << "Algorithm: Branch & Bound\n";
+
+    vector<int> warm = branch_and_bound();
+    auto start = chrono::high_resolution_clock::now();
+    vector<int> path = branch_and_bound();
+    auto end = chrono::high_resolution_clock::now();
+    double cost = total_cost(path);
+    auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
+    cout << fixed << setprecision(2);
+    cout << "Cost: " << cost << "\n";
+    cout << "Time (us): " << duration.count() << "\n";
     cout << "Path: ";
     for(int x : path) cout << x << " ";
     cout << "\n\n";
@@ -211,16 +236,14 @@ int main()
 
     cin >> n;
     points.resize(n);
-
     for(int i = 0; i < n; i++)
         cin >> points[i].first >> points[i].second;
-
     run("Random", random_path);
     run("Greedy", greedy);
     run("Nearest Insertion", nearest_insertion);
-
     if(n <= 12)
-        run("Branch & Bound", branch_and_bound);
-
+    {
+        run_bb();
+    }
     return 0;
 }
