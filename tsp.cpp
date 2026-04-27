@@ -1,25 +1,10 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-using ll = long long;
 using pii = pair<double,double>;
 
 vector<pii> points;
 int n;
-
-void generate_input(int N, int seed = 42) 
-{
-    n = N;
-    points.resize(n);
-
-    mt19937 rng(seed);
-    uniform_real_distribution<double> dist(0, 1000);
-
-    for(int i = 0; i < n; i++) 
-    {
-        points[i] = {dist(rng), dist(rng)};
-    }
-}
 
 double dist(int i, int j) 
 {
@@ -37,7 +22,14 @@ double total_cost(const vector<int>& path)
     return cost;
 }
 
-// greedy
+vector<int> random_path() 
+{
+    vector<int> p(n);
+    iota(p.begin(), p.end(), 0);
+    shuffle(p.begin(), p.end(), mt19937(42));
+    return p;
+}
+
 vector<int> greedy() 
 {
     vector<bool> visited(n, false);
@@ -73,141 +65,162 @@ vector<int> greedy()
     return path;
 }
 
-// 2opt 
-void two_opt(vector<int>& path) 
+vector<int> nearest_insertion() 
 {
-    bool improved = true;
+    vector<bool> inTour(n, false);
+    vector<int> tour;
 
-    while(improved) 
+    tour = {0, 1};
+    inTour[0] = inTour[1] = true;
+
+    while((int)tour.size() < n) 
     {
-        improved = false;
+        int best_node = -1;
+        double best_dist = 1e18;
 
-        for(int i = 1; i < n - 2; i++) 
+        for(int i = 0; i < n; i++) if(!inTour[i]) 
         {
-            for(int j = i + 1; j < n - 1; j++) 
+            for(int j : tour) 
             {
-
-                double before =
-                    dist(path[i-1], path[i]) +
-                    dist(path[j], path[j+1]);
-
-                double after =
-                    dist(path[i-1], path[j]) +
-                    dist(path[i], path[j+1]);
-
-                if(after < before) 
+                double d = dist(i, j);
+                if(d < best_dist) 
                 {
-                    reverse(path.begin() + i, path.begin() + j + 1);
-                    improved = true;
+                    best_dist = d;
+                    best_node = i;
                 }
             }
         }
+
+        int best_pos = 0;
+        double best_increase = 1e18;
+
+        for(int i = 0; i < (int)tour.size(); i++) 
+        {
+            int u = tour[i];
+            int v = tour[(i+1)%tour.size()];
+
+            double inc = dist(u, best_node) + dist(best_node, v) - dist(u, v);
+
+            if(inc < best_increase) 
+            {
+                best_increase = inc;
+                best_pos = i + 1;
+            }
+        }
+
+        tour.insert(tour.begin() + best_pos, best_node);
+        inTour[best_node] = true;
     }
+
+    return tour;
 }
 
-// multistart 
-vector<int> multi_start(int iterations) 
+double best_cost;
+vector<int> best_path;
+
+double bound_estimate(const vector<bool>& visited) 
 {
-    vector<int> best_path;
-    double best_cost = 1e18;
+    double estimate = 0;
 
-    vector<int> base(n);
-    iota(base.begin(), base.end(), 0);
-
-    mt19937 rng(42);
-
-    for(int it = 0; it < iterations; it++) 
+    for(int i = 0; i < n; i++) if(!visited[i]) 
     {
-        shuffle(base.begin(), base.end(), rng);
+        double mn = 1e18;
+        for(int j = 0; j < n; j++) if(i != j) 
+        {
+            mn = min(mn, dist(i,j));
+        }
+        estimate += mn;
+    }
 
-        vector<int> path = base;
-        two_opt(path);
+    return estimate;
+}
 
-        double cost = total_cost(path);
-
+void dfs(vector<int>& path, vector<bool>& visited, double cost) 
+{
+    if(path.size() == n) 
+    {
+        cost += dist(path.back(), path[0]);
         if(cost < best_cost) 
         {
             best_cost = cost;
             best_path = path;
         }
+        return;
     }
+
+    double b = cost + bound_estimate(visited);
+    if(b >= best_cost) return;
+
+    for(int i = 0; i < n; i++) if(!visited[i]) 
+    {
+        visited[i] = true;
+        path.push_back(i);
+
+        double new_cost = cost;
+        if(path.size() > 1)
+            new_cost += dist(path[path.size()-2], i);
+
+        dfs(path, visited, new_cost);
+
+        visited[i] = false;
+        path.pop_back();
+    }
+}
+
+vector<int> branch_and_bound() 
+{
+    best_cost = 1e18;
+    best_path.clear();
+
+    vector<int> path;
+    vector<bool> visited(n, false);
+
+    path.push_back(0);
+    visited[0] = true;
+
+    dfs(path, visited, 0);
 
     return best_path;
 }
 
-// memory
-size_t get_memory_usage() 
-{
-    return sizeof(points) + sizeof(double)*points.size()*2;
-}
-
-// run 
 void run(string name, function<vector<int>()> solver) 
 {
+    cout << "============================\n";
+    cout << "Algorithm: " << name << "\n";
+
     auto start = chrono::high_resolution_clock::now();
-
     vector<int> path = solver();
-
     auto end = chrono::high_resolution_clock::now();
 
     double cost = total_cost(path);
-    auto duration = chrono::duration_cast<chrono::milliseconds>(end - start);
+    auto time = chrono::duration_cast<chrono::milliseconds>(end - start);
 
-    cout << "Algorithm: " << name << "\n";
+    cout << fixed << setprecision(2);
     cout << "Cost: " << cost << "\n";
-    cout << "Time(ms): " << duration.count() << "\n";
-    cout << "Memory(bytes): " << get_memory_usage() << "\n";
+    cout << "Time(ms): " << time.count() << "\n";
 
-    cout << "Path:\n";
+    cout << "Path: ";
     for(int x : path) cout << x << " ";
     cout << "\n\n";
 }
 
-
-
-int main(int argc, char* argv[]) 
+int main() 
 {
     ios::sync_with_stdio(false);
     cin.tie(nullptr);
 
-    // ./a.out gen 500
-    // ./a.out < input.txt
+    cin >> n;
+    points.resize(n);
 
-    if(argc >= 2 && string(argv[1]) == "gen")
-    {
-        int N = 500;
-        if(argc >= 3) N = stoi(argv[2]);
+    for(int i = 0; i < n; i++)
+        cin >> points[i].first >> points[i].second;
 
-        generate_input(N);
+    run("Random", random_path);
+    run("Greedy", greedy);
+    run("Nearest Insertion", nearest_insertion);
 
-        cout << "Generated " << N << " points\n";
-    } 
-    else 
-    {
-        cin >> n;
-        points.resize(n);
-        for(int i = 0; i < n; i++) 
-        {
-            cin >> points[i].first >> points[i].second;
-        }
-    }
-
-    run("Greedy", []() 
-    {
-        return greedy();
-    });
-
-    run("Greedy + 2-opt", []() 
-    {
-        auto p = greedy();
-        two_opt(p);
-        return p;
-    });
-
-    run("Multi-start (2-opt)", []() 
-    {
-        return multi_start(50);
-    });
+    if(n <= 12)
+        run("Branch & Bound", branch_and_bound);
 
     return 0;
 }
