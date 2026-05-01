@@ -1,6 +1,9 @@
 # TSP-Routing-Optimization
 Application and Mathematical Analysis of TSP-based Delivery Route Optimization using Greedy, Random, Branch and Bound, and Nearest Insertion
 
+## Run the Project
+- Download and extract `TSP_System.zip`
+- Run exe.
 
 ## Documentation:
 - Qt Documentation — https://doc.qt.io
