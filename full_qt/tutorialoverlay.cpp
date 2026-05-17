@@ -31,10 +31,6 @@ TutorialOverlay::TutorialOverlay(QWidget *parent)
 
     hide();
 
-    // =========================
-    // TOOLTIP CARD
-    // =========================
-
     tooltipCard = new QWidget(this);
 
     tooltipCard->setFixedWidth(320);
@@ -92,10 +88,6 @@ TutorialOverlay::TutorialOverlay(QWidget *parent)
     layout->addWidget(titleLabel);
 
     layout->addWidget(descLabel);
-
-    // =========================
-    // BUTTONS
-    // =========================
 
     QHBoxLayout* btnLayout =
         new QHBoxLayout;
@@ -314,21 +306,12 @@ void TutorialOverlay::updateStepUI()
 
     tooltipCard->adjustSize();
 
-    // =========================
-    // DEFAULT POSITION
-    // =========================
-
     int tooltipX =
         r.right() + 20;
 
     int tooltipY =
         r.center().y()
         - tooltipCard->height() / 2;
-
-    // =========================
-    // IF OVERFLOW RIGHT
-    // -> MOVE LEFT SIDE
-    // =========================
 
     if (
         tooltipX + tooltipCard->width()
@@ -341,10 +324,6 @@ void TutorialOverlay::updateStepUI()
             - 20;
     }
 
-    // =========================
-    // PREVENT BOTTOM OVERFLOW
-    // =========================
-
     if (
         tooltipY + tooltipCard->height()
         > height() - 20
@@ -356,18 +335,10 @@ void TutorialOverlay::updateStepUI()
             - 20;
     }
 
-    // =========================
-    // PREVENT TOP OVERFLOW
-    // =========================
-
     if (tooltipY < 20)
     {
         tooltipY = 20;
     }
-
-    // =========================
-    // APPLY POSITION
-    // =========================
 
     tooltipCard->move(
         tooltipX,
@@ -387,18 +358,10 @@ QRect TutorialOverlay::targetRectGlobal() const
     const auto& step =
         tutorialSteps[currentStep];
 
-    // =========================
-    // CUSTOM RECT
-    // =========================
-
     if (step.useCustomRect)
     {
         return step.customRect;
     }
-
-    // =========================
-    // NORMAL WIDGET TARGET
-    // =========================
 
     if (!currentTarget)
         return QRect();
@@ -431,10 +394,6 @@ void TutorialOverlay::paintEvent(
         QPainter::Antialiasing
         );
 
-    // =========================
-    // SOFT OVERLAY
-    // =========================
-
     QColor overlayColor(
         0,
         0,
@@ -452,19 +411,11 @@ void TutorialOverlay::paintEvent(
 
     painter.drawRect(rect());
 
-    // =========================
-    // TARGET
-    // =========================
-
     QRect target =
         animatedTargetRect;
 
     if (!target.isValid())
         return;
-
-    // =========================
-    // GLOW
-    // =========================
 
     QPen glowPen(
         QColor(56,189,248,220)
@@ -502,10 +453,6 @@ void TutorialOverlay::updateTooltipPosition(
         r.center().y()
         - tooltipCard->height() / 2;
 
-    // =========================
-    // RIGHT OVERFLOW
-    // =========================
-
     if (
         tooltipX + tooltipCard->width()
         > width() - 20
@@ -517,10 +464,6 @@ void TutorialOverlay::updateTooltipPosition(
             - 20;
     }
 
-    // =========================
-    // BOTTOM OVERFLOW
-    // =========================
-
     if (
         tooltipY + tooltipCard->height()
         > height() - 20
@@ -531,10 +474,6 @@ void TutorialOverlay::updateTooltipPosition(
             - tooltipCard->height()
             - 20;
     }
-
-    // =========================
-    // TOP OVERFLOW
-    // =========================
 
     if (tooltipY < 20)
     {
@@ -552,10 +491,6 @@ bool TutorialOverlay::eventFilter(
     QEvent *event
     )
 {
-    // =========================
-    // ONLY TRACK PARENT WINDOW
-    // =========================
-
     if (obj != parentWidget())
     {
         return QWidget::eventFilter(
@@ -563,10 +498,6 @@ bool TutorialOverlay::eventFilter(
             event
             );
     }
-
-    // =========================
-    // HANDLE RESIZE
-    // =========================
 
     if (
         event->type()
@@ -579,17 +510,9 @@ bool TutorialOverlay::eventFilter(
             );
     }
 
-    // =========================
-    // UPDATE OVERLAY SIZE
-    // =========================
-
     resize(
         parentWidget()->size()
         );
-
-    // =========================
-    // NO ACTIVE STEP
-    // =========================
 
     if (
         tutorialSteps.isEmpty()
@@ -603,19 +526,12 @@ bool TutorialOverlay::eventFilter(
             );
     }
 
-    // =========================
-    // UPDATE TARGET RECT
-    // =========================
-
     QRect targetRect =
         targetRectGlobal();
 
     animatedTargetRect =
         targetRect;
 
-    // =========================
-    // UPDATE TOOLTIP POSITION
-    // =========================
 
     updateTooltipPosition(
         targetRect
