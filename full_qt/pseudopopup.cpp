@@ -4,7 +4,6 @@
 #include <QPropertyAnimation>
 #include <QTimer>
 
-// ================= INIT =================
 PseudoPopup::PseudoPopup(QWidget *parent)
     : QWidget(parent)
 {
@@ -19,12 +18,10 @@ PseudoPopup::PseudoPopup(QWidget *parent)
 
     opacityAnim = new QPropertyAnimation(effect, "opacity", this);
 
-    // ===== Layout =====
     mainLayout = new QVBoxLayout(this);
     mainLayout->setContentsMargins(12, 12, 12, 12);
     mainLayout->setSpacing(10);
 
-    // ===== STYLE =====
     setStyleSheet(R"(
         QWidget {
             background: rgba(20,23,30,0.94);
@@ -33,7 +30,6 @@ PseudoPopup::PseudoPopup(QWidget *parent)
         }
     )");
 
-    // ===== Title =====
     titleLabel = new QLabel("Pseudo Code", this);
     titleLabel->setStyleSheet(R"(
     color:#38bdf8;
@@ -67,7 +63,6 @@ PseudoPopup::PseudoPopup(QWidget *parent)
 
     mainLayout->addWidget(codeContainer);
 
-    // ===== Compare =====
     compareLabel = new QLabel(this);
     compareLabel->setStyleSheet(R"(
         color:#cbd5e1;
@@ -83,7 +78,6 @@ PseudoPopup::PseudoPopup(QWidget *parent)
     hide();
 }
 
-// ================= BUILD =================
 void PseudoPopup::clearLines()
 {
     for (auto &line : codeLines)
@@ -171,7 +165,6 @@ void PseudoPopup::buildPseudoForAlg()
     codeLayout->addStretch();
 }
 
-// ================= LOGIC =================
 void PseudoPopup::setAlgorithm(TSPAlgorithm alg)
 {
     currentAlg = alg;
@@ -243,7 +236,6 @@ void PseudoPopup::updateForStep(const Step &step)
     compareLabel->setText(text);
 }
 
-// ================= TOGGLE =================
 void PseudoPopup::toggle()
 {
     if (isVisible()) {
