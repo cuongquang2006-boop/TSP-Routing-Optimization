@@ -5,19 +5,12 @@
 DPPopup::DPPopup(QWidget *parent)
     : QWidget(parent)
 {
-    // =====================================
-    // WINDOW
-    // =====================================
 
     setFixedSize(300, 220);
 
     setWindowFlags(Qt::Widget);
 
     setAttribute(Qt::WA_StyledBackground);
-
-    // =====================================
-    // OPACITY
-    // =====================================
 
     effect =
         new QGraphicsOpacityEffect(this);
@@ -30,10 +23,6 @@ DPPopup::DPPopup(QWidget *parent)
             "opacity",
             this
             );
-
-    // =====================================
-    // STYLE
-    // =====================================
 
     setStyleSheet(R"(
 
@@ -62,9 +51,6 @@ DPPopup::DPPopup(QWidget *parent)
 
     )");
 
-    // =====================================
-    // LAYOUT
-    // =====================================
 
     mainLayout =
         new QVBoxLayout(this);
@@ -77,10 +63,6 @@ DPPopup::DPPopup(QWidget *parent)
         );
 
     mainLayout->setSpacing(10);
-
-    // =====================================
-    // TITLE
-    // =====================================
 
     titleLabel =
         new QLabel(
@@ -101,10 +83,6 @@ DPPopup::DPPopup(QWidget *parent)
 
     mainLayout->addWidget(titleLabel);
 
-    // =====================================
-    // STATE
-    // =====================================
-
     maskLabel =
         new QLabel(
             "Mask : 1011",
@@ -120,10 +98,6 @@ DPPopup::DPPopup(QWidget *parent)
     mainLayout->addWidget(maskLabel);
 
     mainLayout->addWidget(setLabel);
-
-    // =====================================
-    // TRANSITION
-    // =====================================
 
     transitionLabel =
         new QLabel(
@@ -167,9 +141,6 @@ DPPopup::DPPopup(QWidget *parent)
 
     mainLayout->addWidget(newCostLabel);
 
-    // =====================================
-    // BITMASK
-    // =====================================
 
     bitmaskLabel =
         new QLabel(
@@ -311,18 +282,11 @@ void DPPopup::updateForStep(
     {
         return;
     }
-    // =====================================
-    // ONLY DP STEPS
-    // =====================================
 
     if (step.dpMask < 0)
     {
         return;
     }
-
-    // =====================================
-    // STATE
-    // =====================================
 
     maskLabel->setText(
         QString(
@@ -342,10 +306,6 @@ void DPPopup::updateForStep(
                 )
         );
 
-    // =====================================
-    // TRANSITION
-    // =====================================
-
     transitionLabel->setText(
         QString(
             "%1 → %2"
@@ -354,9 +314,6 @@ void DPPopup::updateForStep(
             .arg(step.dpTo)
         );
 
-    // =====================================
-    // COSTS
-    // =====================================
 
     QString oldCostText;
 
@@ -394,19 +351,13 @@ void DPPopup::updateForStep(
                 )
         );
 
-    // =====================================
-    // BITMASK
-    // =====================================
 
     bitmaskLabel->setText(
         maskToBinary(
             step.dpMask
             )
         );
-
-    // =====================================
-    // CITY VISUAL
-    // =====================================
+    
 
     QString cityText;
 
