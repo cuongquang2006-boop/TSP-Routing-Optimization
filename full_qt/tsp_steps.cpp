@@ -3,28 +3,33 @@
 
 int Step::getAnimationDuration() const
 {
-    switch (action)
-    {
+    // Duration in milliseconds based on action type
+    // These durations control how long the smooth animation takes
+    switch (action) {
     case StepAction::SELECT_NODE:
         return 300;
+
     case StepAction::COMPARE_EDGE:
-        return 650;
+        return 700;   // đang suy nghĩ → chậm nhất
+
     case StepAction::UPDATE_BEST:
-        return 500;
+        return 500;   // quyết định → vẫn phải thấy rõ
+
     case StepAction::INSERT_NODE:
-        return 750;
+        return 750;   // commit → chậm + chắc
+
     case StepAction::VISIT_NODE:
         return 500;
+
     case StepAction::COMPLETE:
-        return 800;
+        return 800;   // kết thúc → chill
     }
-    return 300;
+    return 400;         // Default fallback
 }
 
 QString stepActionToString(StepAction action)
 {
-    switch (action)
-    {
+    switch (action) {
     case StepAction::SELECT_NODE:
         return QStringLiteral("SELECT_NODE");
     case StepAction::COMPARE_EDGE:
@@ -47,8 +52,7 @@ QJsonObject stepToJson(const Step &step)
     object["action"] = stepActionToString(step.action);
 
     QJsonArray tourArray;
-    for (int index : step.tour)
-    {
+    for (int index : step.tour) {
         tourArray.append(index);
     }
     object["tour"] = tourArray;
@@ -70,18 +74,15 @@ QString stepToString(const Step &step)
 
 QString buildStepDescription(const Step &step, const QVector<QPointF> &points)
 {
-    switch (step.action)
-    {
+    switch (step.action) {
     case StepAction::SELECT_NODE:
-        if (step.currentNode >= 0)
-        {
+        if (step.currentNode >= 0) {
             return QString("Select node %1").arg(step.currentNode);
         }
         return "Initialize tour";
 
     case StepAction::COMPARE_EDGE:
-        if (step.edge.first >= 0 && step.edge.second >= 0)
-        {
+        if (step.edge.first >= 0 && step.edge.second >= 0) {
             qreal distance = step.value;
             return QString("Compare edge (%1 → %2), distance = %3")
                 .arg(step.edge.first)
@@ -91,16 +92,14 @@ QString buildStepDescription(const Step &step, const QVector<QPointF> &points)
         return "Compare edge";
 
     case StepAction::UPDATE_BEST:
-        if (step.bestCandidate >= 0)
-        {
+        if (step.bestCandidate >= 0) {
             return QString("Update best candidate: node %1")
                 .arg(step.bestCandidate);
         }
         return "Update best";
 
     case StepAction::INSERT_NODE:
-        if (step.bestCandidate >= 0)
-        {
+        if (step.bestCandidate >= 0) {
             return QString("Insert node %1 into tour, cost = %2")
                 .arg(step.bestCandidate)
                 .arg(step.value, 0, 'f', 2);
@@ -108,8 +107,7 @@ QString buildStepDescription(const Step &step, const QVector<QPointF> &points)
         return "Insert node";
 
     case StepAction::VISIT_NODE:
-        if (step.currentNode >= 0)
-        {
+        if (step.currentNode >= 0) {
             return QString("Visit node %1, total cost = %2")
                 .arg(step.currentNode)
                 .arg(step.value, 0, 'f', 2);

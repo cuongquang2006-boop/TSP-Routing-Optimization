@@ -4,6 +4,7 @@
 #include <QPropertyAnimation>
 #include <QTimer>
 
+// ================= INIT =================
 PseudoPopup::PseudoPopup(QWidget *parent)
     : QWidget(parent)
 {
@@ -12,15 +13,18 @@ PseudoPopup::PseudoPopup(QWidget *parent)
     setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
     setWindowFlags(Qt::Widget);
 
+    // ===== Opacity =====
     effect = new QGraphicsOpacityEffect(this);
     setGraphicsEffect(effect);
 
     opacityAnim = new QPropertyAnimation(effect, "opacity", this);
 
+    // ===== Layout =====
     mainLayout = new QVBoxLayout(this);
     mainLayout->setContentsMargins(12, 12, 12, 12);
     mainLayout->setSpacing(10);
 
+    // ===== STYLE =====
     setStyleSheet(R"(
         QWidget {
             background: rgba(20,23,30,0.94);
@@ -29,6 +33,7 @@ PseudoPopup::PseudoPopup(QWidget *parent)
         }
     )");
 
+    // ===== Title =====
     titleLabel = new QLabel("Pseudo Code", this);
     titleLabel->setStyleSheet(R"(
     color:#38bdf8;
@@ -62,6 +67,7 @@ PseudoPopup::PseudoPopup(QWidget *parent)
 
     mainLayout->addWidget(codeContainer);
 
+    // ===== Compare =====
     compareLabel = new QLabel(this);
     compareLabel->setStyleSheet(R"(
         color:#cbd5e1;
@@ -77,6 +83,7 @@ PseudoPopup::PseudoPopup(QWidget *parent)
     hide();
 }
 
+// ================= BUILD =================
 void PseudoPopup::clearLines()
 {
     for (auto &line : codeLines)
@@ -127,6 +134,24 @@ void PseudoPopup::buildPseudoForAlg()
             "Prune branch",
             "Update best"
         }; break;
+    case TSPAlgorithm::SIMULATED_ANNEALING:
+        lines = {
+            "Initialize random tour",
+            "Generate neighbor tour",
+            "Compare new solution",
+            "Accept or reject move",
+            "Cool down temperature"
+        };
+        break;
+    case TSPAlgorithm::HELD_KARP:
+        lines = {
+            "Initialize DP table",
+            "Enumerate bitmask states",
+            "Relax transition u -> v",
+            "Update optimal subproblem",
+            "Reconstruct optimal tour"
+        };
+        break;
     }
 
     for (const QString &text : lines)
@@ -146,6 +171,7 @@ void PseudoPopup::buildPseudoForAlg()
     codeLayout->addStretch();
 }
 
+// ================= LOGIC =================
 void PseudoPopup::setAlgorithm(TSPAlgorithm alg)
 {
     currentAlg = alg;
@@ -217,6 +243,7 @@ void PseudoPopup::updateForStep(const Step &step)
     compareLabel->setText(text);
 }
 
+// ================= TOGGLE =================
 void PseudoPopup::toggle()
 {
     if (isVisible()) {

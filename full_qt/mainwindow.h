@@ -3,10 +3,20 @@
 
 #include <QMainWindow>
 #include <QTimer>
+#include <QLineEdit>
+#include <QPropertyAnimation>
+#include <QEasingCurve>
+
 #include "tsp_steps.h"
 #include "tsp_algorithms.h"
 #include "pseudopopup.h"
-#include <QLineEdit>
+#include "aboutpopup.h"
+
+#include "tutorialoverlay.h"
+
+#include "algorithmcomparepopup.h"
+
+#include "dppopup.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui
@@ -35,61 +45,115 @@ public:
 
 signals:
     void stepChanged(int currentIndex, int totalSteps);
+
     void playStateChanged(bool isPlaying);
+
     void algorithmRunning(bool running);
 
 private slots:
     void onGenerateClicked();
+
     void onRunClicked();
+
     void onStepClicked();
+
     void onResetClicked();
+
     void onAlgorithmChanged(int index);
+
     void onSpeedChanged(int value);
+
     void onTimerTimeout();
 
 private:
     void setupWidgets();
+
     void setupLayouts();
+
     void setupStyles();
+
     void setupConnections();
+
     void loadSteps();
+
     void applyStep(const Step &step);
+
     void updateInfoPanel();
+
     void play();
+
     void pause();
+
     void nextStep();
+
     void reset();
+
     void applyGlowEffect(QPushButton* btn);
+
     void resizeEvent(QResizeEvent *event);
+
     void setInputUIEnabled(bool enabled);
+
     void updateInputModeUI();
 
-
     Ui::MainWindow *ui;
-
 
     GraphCanvas *canvasWidget;
 
     QWidget *controlPanel;
+
+    QPushButton *togglePanelButton;
+
+    bool panelCollapsed = false;
+
+    QPropertyAnimation *panelAnimation;
+
+    QPropertyAnimation *toggleButtonAnim;
+
     QComboBox *algorithmCombo;
+
     QPushButton *generateButton;
+
     QPushButton *runButton;
+
     QPushButton *stepButton;
+
+    QPushButton *backButton;
+
     QPushButton *resetButton;
+
     QSlider *speedSlider;
+
     QLabel *speedLabel;
 
     QWidget *legendBar;
 
+    QPushButton *aboutButton;
+
+    AboutPopup *aboutPopup;
+
+    QPushButton *compareButton;
+
+    AlgorithmComparePopup *comparePopup;
+
     QPushButton *pseudoButton;
+
     PseudoPopup *pseudoPopup;
 
+    QPushButton *dpButton;
+
+    DPPopup *dpPopup;
+
     QWidget *infoPanel;
+
     QLabel *costLabel;
+
     QLabel *timeLabel;
+
     QLabel *stepLabel;
 
     QVBoxLayout *mainLayout;
+
     QHBoxLayout *contentLayout;
 
     QVector<QPointF> points;
@@ -105,14 +169,20 @@ private:
     bool isPlaying;
 
     QLabel *modeLabel;
+
     QPushButton *clickModeButton;
+
     QPushButton *inputModeButton;
 
     QLineEdit *inputX;
+
     QLineEdit *inputY;
+
     QPushButton *addPointButton;
 
     bool isClickMode = true;
+
+    TutorialOverlay* tutorialOverlay;
 };
 
 #endif

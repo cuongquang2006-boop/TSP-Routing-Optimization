@@ -9,11 +9,9 @@ qt_add_executable(TSP_Visualize_Application
     WIN32 MACOSX_BUNDLE
     main.cpp
     mainwindow.cpp
-    mainwindowLogic.cpp
     mainwindow.h
     mainwindow.ui
     GraphCanvas.cpp
-    GraphCanvasLogic.cpp
     GraphCanvas.h
     tsp_steps.cpp
     tsp_steps.h
@@ -21,6 +19,15 @@ qt_add_executable(TSP_Visualize_Application
     tsp_algorithms.h
     pseudopopup.cpp
     pseudopopup.h
+    mainwindow_lg.cpp
+    dppopup.h
+    dppopup.cpp
+    aboutpopup.h
+    aboutpopup.cpp
+    tutorialoverlay.h
+    tutorialoverlay.cpp
+    algorithmcomparepopup.h
+    algorithmcomparepopup.cpp
 )
 
 target_link_libraries(TSP_Visualize_Application

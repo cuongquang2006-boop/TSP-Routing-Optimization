@@ -10,8 +10,7 @@
 #include "tsp_algorithms.h"
 #include "tsp_steps.h"
 
-struct PseudoLine
-{
+struct PseudoLine {
     QLabel *label;
 };
 
