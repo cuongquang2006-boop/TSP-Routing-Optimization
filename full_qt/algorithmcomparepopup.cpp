@@ -13,10 +13,6 @@ AlgorithmComparePopup::AlgorithmComparePopup(QWidget *parent)
 
     setAttribute(Qt::WA_StyledBackground);
 
-    // =========================
-    // STYLE
-    // =========================
-
     setStyleSheet(R"(
 
         QWidget {
@@ -40,9 +36,6 @@ AlgorithmComparePopup::AlgorithmComparePopup(QWidget *parent)
 
     )");
 
-    // =========================
-    // OPACITY
-    // =========================
 
     effect =
         new QGraphicsOpacityEffect(this);
@@ -58,9 +51,6 @@ AlgorithmComparePopup::AlgorithmComparePopup(QWidget *parent)
 
     opacityAnim->setDuration(180);
 
-    // =========================
-    // MAIN LAYOUT
-    // =========================
 
     mainLayout =
         new QVBoxLayout(this);
@@ -73,10 +63,6 @@ AlgorithmComparePopup::AlgorithmComparePopup(QWidget *parent)
         );
 
     mainLayout->setSpacing(12);
-
-    // =========================
-    // TITLE
-    // =========================
 
     titleLabel =
         new QLabel(
@@ -105,9 +91,6 @@ AlgorithmComparePopup::AlgorithmComparePopup(QWidget *parent)
 
     mainLayout->addWidget(titleLabel);
 
-    // =========================
-    // SUMMARY
-    // =========================
 
     summaryLabel =
         new QLabel(
@@ -128,9 +111,6 @@ AlgorithmComparePopup::AlgorithmComparePopup(QWidget *parent)
 
     mainLayout->addWidget(summaryLabel);
 
-    // =========================
-    // SCROLL AREA
-    // =========================
 
     scrollArea =
         new QScrollArea(this);
@@ -184,10 +164,6 @@ AlgorithmComparePopup::AlgorithmComparePopup(QWidget *parent)
         4
         );
 
-    // =========================
-    // TEMP CARDS
-    // =========================
-
 
     contentLayout->addStretch();
 
@@ -237,10 +213,6 @@ QWidget* AlgorithmComparePopup::createAlgorithmCard(
 
     layout->setSpacing(8);
 
-    // =====================
-    // TITLE
-    // =====================
-
     QLabel *nameLabel =
         new QLabel(name);
 
@@ -255,9 +227,6 @@ QWidget* AlgorithmComparePopup::createAlgorithmCard(
 
     layout->addWidget(nameLabel);
 
-    // =====================
-    // INFO
-    // =====================
 
     QLabel *infoLabel =
         new QLabel(
@@ -343,9 +312,6 @@ void AlgorithmComparePopup::updateComparison(
     const QVector<QPointF>& points
     )
 {
-    // =========================
-    // CLEAR OLD CARDS
-    // =========================
 
     QLayoutItem *item;
 
@@ -370,10 +336,6 @@ void AlgorithmComparePopup::updateComparison(
             ).arg(n)
         );
 
-    // =========================
-    // RANDOM
-    // =========================
-
     double randomOps =
         n;
 
@@ -386,10 +348,6 @@ void AlgorithmComparePopup::updateComparison(
             "Poor"
             )
         );
-
-    // =========================
-    // GREEDY
-    // =========================
 
     double greedyOps =
         n * n;
@@ -404,10 +362,6 @@ void AlgorithmComparePopup::updateComparison(
             )
         );
 
-    // =========================
-    // NEAREST INSERTION
-    // =========================
-
     double insertionOps =
         n * n;
 
@@ -420,10 +374,6 @@ void AlgorithmComparePopup::updateComparison(
             "Very Good"
             )
         );
-
-    // =========================
-    // BRANCH & BOUND
-    // =========================
 
     double factorial = 1.0;
 
@@ -442,9 +392,6 @@ void AlgorithmComparePopup::updateComparison(
             )
         );
 
-    // =========================
-    // SIMULATED ANNEALING
-    // =========================
 
     double saOps =
         n * 200.0;
@@ -458,10 +405,6 @@ void AlgorithmComparePopup::updateComparison(
             "Near Optimal"
             )
         );
-
-    // =========================
-    // HELD-KARP
-    // =========================
 
     double heldKarpOps =
         n * n * std::pow(2.0, n);
