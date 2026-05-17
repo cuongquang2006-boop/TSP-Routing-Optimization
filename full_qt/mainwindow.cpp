@@ -27,33 +27,26 @@ MainWindow::MainWindow(QWidget *parent)
     , mainLayout(nullptr)
     , contentLayout(nullptr)
 {
-    // Setup UI from designer (or create minimal central widget)
     ui->setupUi(this);
 
     resize(1200,600);
 
-    // Ensure central widget exists
     if (!centralWidget()) {
         setCentralWidget(new QWidget(this));
     }
 
-    // Initialize components
     setupWidgets();
     setupLayouts();
     setupStyles();
     setupConnections();
 
-    // Create and connect animation timer
     animationTimer = new QTimer(this);
     connect(animationTimer, &QTimer::timeout, this, &MainWindow::onTimerTimeout);
 
-    // Set initial values
     speedSlider->setValue(5);
 
-    // 🔥 set default mode (nếu chưa có)
     canvasWidget->setInputMode(InputMode::CLICK);
 
-    // 🔥 QUAN TRỌNG: sync UI theo mode
     updateInputModeUI();
 
     canvasWidget->setInputMode(InputMode::NONE);
@@ -140,19 +133,16 @@ void MainWindow::setupWidgets()
     speedSlider->setValue(5);
     speedLabel = new QLabel(tr("Speed: 2.5x"), controlPanel);
 
-    // bar explain
     legendBar = new QWidget(this);
     legendBar->setObjectName("legendBar");
 
     legendBar->setFixedHeight(40);
 
-    // ===== INPUT MODE =====
     modeLabel = new QLabel("Input Mode", controlPanel);
 
     clickModeButton = new QPushButton("Click", controlPanel);
     inputModeButton = new QPushButton("Manual", controlPanel);
 
-    // ===== INPUT FIELDS =====
     inputX = new QLineEdit(controlPanel);
     inputY = new QLineEdit(controlPanel);
 
@@ -161,7 +151,6 @@ void MainWindow::setupWidgets()
 
     addPointButton = new QPushButton("Add Point", controlPanel);
 
-    // Pseudo code button
     pseudoButton = new QPushButton(tr("PSEUDO CODE"), controlPanel);
     pseudoButton->setObjectName("pseudoButton");
     pseudoButton->setMinimumHeight(36);
@@ -178,7 +167,6 @@ void MainWindow::setupWidgets()
 
     dpButton->setMinimumHeight(36);
 
-    // Create popup (hidden by default)
     pseudoPopup = new PseudoPopup(this);
     pseudoPopup->hide();
 
@@ -222,7 +210,6 @@ void MainWindow::setupWidgets()
 
 void MainWindow::setupLayouts()
 {
-    // Create main layout on central widget
     QWidget *central = centralWidget();
     if (!central) {
         central = new QWidget(this);
@@ -236,11 +223,9 @@ void MainWindow::setupLayouts()
     contentLayout = new QHBoxLayout;
     contentLayout->setSpacing(12);
 
-    // Left canvas area
     canvasWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     contentLayout->addWidget(canvasWidget, 7);
 
-    // Right control panel
     QVBoxLayout *controlLayout = new QVBoxLayout(controlPanel);
     controlLayout->setContentsMargins(12, 12, 12, 12);
     controlLayout->setSpacing(14);
@@ -274,7 +259,6 @@ void MainWindow::setupLayouts()
     controlLayout->addWidget(speedLabel);
     controlLayout->addWidget(speedSlider);
 
-    // ===== INPUT MODE UI =====
     controlLayout->addSpacing(10);
 
     controlLayout->addWidget(modeLabel);
@@ -312,19 +296,16 @@ void MainWindow::setupLayouts()
     legendLayout->addWidget(createLegendItem("Rejected", "#ef4444"));
     legendLayout->addWidget(createLegendItem("Candidate", "#eab308"));
 
-    // mode buttons (Click / Manual)
     QHBoxLayout *modeLayout = new QHBoxLayout;
     modeLayout->addWidget(clickModeButton);
     modeLayout->addWidget(inputModeButton);
     controlLayout->addLayout(modeLayout);
 
-    // input fields (X, Y)
     QHBoxLayout *inputLayout = new QHBoxLayout;
     inputLayout->addWidget(inputX);
     inputLayout->addWidget(inputY);
     controlLayout->addLayout(inputLayout);
 
-    // add button
     controlLayout->addWidget(addPointButton);
 
     controlLayout->addStretch(1);
@@ -370,7 +351,6 @@ void MainWindow::setupLayouts()
 
     comparePopup->hide();
 
-    // Bottom info panel
     QHBoxLayout *infoLayout = new QHBoxLayout(infoPanel);
     infoLayout->setContentsMargins(14, 10, 14, 10);
     infoLayout->setSpacing(24);
@@ -398,7 +378,6 @@ void MainWindow::setupLayouts()
 
 void MainWindow::setupConnections()
 {
-    // Button signals
     connect(generateButton, &QPushButton::clicked, this, &MainWindow::onGenerateClicked);
     connect(runButton, &QPushButton::clicked, this, &MainWindow::onRunClicked);
     connect(stepButton, &QPushButton::clicked, this, &MainWindow::onStepClicked);
@@ -428,11 +407,9 @@ void MainWindow::setupConnections()
         }
         );
 
-    // ComboBox & Slider signals
     connect(algorithmCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::onAlgorithmChanged);
     connect(speedSlider, &QSlider::valueChanged, this, &MainWindow::onSpeedChanged);
 
-    // Pseudo button
     connect(pseudoButton, &QPushButton::clicked, this, [this]() {
         if (pseudoPopup) pseudoPopup->toggle();
     });
@@ -463,7 +440,6 @@ void MainWindow::setupConnections()
         }
         );
 
-    // Animation timer signal
     connect(animationTimer, &QTimer::timeout, this, &MainWindow::onTimerTimeout);
 
     connect(clickModeButton, &QPushButton::clicked, this, [this]() {
@@ -471,7 +447,7 @@ void MainWindow::setupConnections()
         clickModeButton->setChecked(true);
         inputModeButton->setChecked(false);
 
-        updateInputModeUI(); // 🔥 thêm
+        updateInputModeUI(); 
     });
 
     connect(inputModeButton, &QPushButton::clicked, this, [this]() {
@@ -479,12 +455,11 @@ void MainWindow::setupConnections()
         clickModeButton->setChecked(false);
         inputModeButton->setChecked(true);
 
-        updateInputModeUI(); // 🔥 thêm
+        updateInputModeUI(); 
     });
 
     connect(canvasWidget, &GraphCanvas::pointAdded, this, [this](QPointF normalizedPos) {
 
-        // convert normalized → actual pixel giống thuật toán đang dùng
         const QRect canvasRect = canvasWidget->contentsRect().adjusted(12, 12, -12, -12);
 
         qreal x = canvasRect.left() + normalizedPos.x() * canvasRect.width();
@@ -527,19 +502,12 @@ void MainWindow::setupConnections()
 
             if (panelCollapsed)
             {
-                // =====================================
-                // PANEL COLLAPSE
-                // =====================================
 
                 panelAnimation->setStartValue(
                     controlPanel->width()
                     );
 
                 panelAnimation->setEndValue(0);
-
-                // =====================================
-                // BUTTON SLIDE OUT
-                // =====================================
 
                 toggleButtonAnim->setStartValue(
                     togglePanelButton->pos()
@@ -556,19 +524,12 @@ void MainWindow::setupConnections()
             }
             else
             {
-                // =====================================
-                // PANEL EXPAND
-                // =====================================
 
                 controlPanel->show();
 
                 panelAnimation->setStartValue(0);
 
                 panelAnimation->setEndValue(360);
-
-                // =====================================
-                // BUTTON RETURN
-                // =====================================
 
                 toggleButtonAnim->setStartValue(
                     togglePanelButton->pos()
@@ -749,10 +710,6 @@ void MainWindow::onGenerateClicked()
         pause();
     }
 
-    // =====================================
-    // RESET VISUAL/UI STATE
-    // =====================================
-
     currentStepIndex = 0;
 
     steps.clear();
@@ -761,17 +718,12 @@ void MainWindow::onGenerateClicked()
     timeLabel->setText("Time: -");
     stepLabel->setText("Step: -");
 
-    // reset pseudo highlight
     if (pseudoPopup)
     {
         pseudoPopup->updateForStep(Step());
     }
 
     emit algorithmRunning(false);
-
-    // =====================================
-    // RANDOM NODE
-    // =====================================
 
     int nodeCount;
 
@@ -785,7 +737,6 @@ void MainWindow::onGenerateClicked()
         nodeCount = QRandomGenerator::global()->bounded(7, 11);
     }
 
-    // ===== B&B LIMIT =====
 
     if (currentAlgorithm == TSPAlgorithm::BRANCH_AND_BOUND &&
         nodeCount > 10)
@@ -801,16 +752,10 @@ void MainWindow::onGenerateClicked()
         nodeCount = 10;
     }
 
-    // =====================================
-    // RESET GRAPH
-    // =====================================
-
     canvasWidget->clearPoints();
 
-    // Generate points
     canvasWidget->generateRandomPoints(nodeCount);
 
-    // rebuild points data
     points.clear();
 
     auto canvasPoints =
@@ -844,7 +789,7 @@ void MainWindow::onStepClicked()
 {
     if (points.size() < 2) return;
 
-    setInputUIEnabled(false);   // 🔥 khóa input
+    setInputUIEnabled(false); 
 
     nextStep();
 }
@@ -868,10 +813,8 @@ void MainWindow::onAlgorithmChanged(int index)
         return;
     }
 
-    // 🧠 Update state trước
     currentAlgorithm = newAlgo;
 
-    // 🎯 Set limit theo algo mới
     if (currentAlgorithm ==
             TSPAlgorithm::BRANCH_AND_BOUND ||
 
@@ -889,21 +832,17 @@ void MainWindow::onAlgorithmChanged(int index)
         currentAlgorithm
         );
 
-    // ⏸️ Pause nếu đang chạy
     if (isPlaying) {
         pause();
     }
 
-    // 🔁 Reset step state (KHÔNG reset graph)
     currentStepIndex = 0;
     steps.clear();
 
-    // 🔄 regenerate steps với graph hiện tại
     if (!points.isEmpty()) {
         loadSteps();
     }
 
-    // 📜 update pseudo code
     if (pseudoPopup)
         pseudoPopup->setAlgorithm(currentAlgorithm);
 
@@ -932,34 +871,25 @@ void MainWindow::onAlgorithmChanged(int index)
 
 void MainWindow::onSpeedChanged(int value)
 {
-    // ===== 1. Map slider → speed multiplier (hiển thị) =====
-    // scale lại cho trực quan hơn
-    double speed = 0.5 + (value - 1) * 0.2; // 0.5x → 2.3x
+    double speed = 0.5 + (value - 1) * 0.2; 
     speedLabel->setText(tr("Speed: %1x").arg(speed, 0, 'f', 1));
 
-    // ===== 2. Điều chỉnh FPS (mượt + không quá nhanh) =====
-    // cinematic range: 24 FPS → 60 FPS
     qreal adaptiveFPS = 24.0 + (value - 1) * 4.0;
 
     int interval = static_cast<int>(1000.0 / adaptiveFPS);
 
-    // clamp để tránh quá nhanh
     interval = std::clamp(interval, 16, 50);
-    // ~60 FPS max, ~20 FPS min
 
-    // ===== 3. LUÔN apply (không phụ thuộc isPlaying) =====
     animationTimer->setInterval(interval);
 }
 
 void MainWindow::onTimerTimeout()
 {
-    // 👉 cho phép step đầu tiên chạy luôn
     if (currentStepIndex == 0) {
         nextStep();
         return;
     }
 
-    // 👉 các step sau phải chờ animation xong
     if (!canvasWidget->isAnimationFinished()) {
         return;
     }
@@ -973,11 +903,9 @@ void MainWindow::loadSteps()
         return;
     }
 
-    // Clear previous steps
     steps.clear();
     currentStepIndex = 0;
 
-    // Generate steps based on selected algorithm
     switch (currentAlgorithm) {
     case TSPAlgorithm::RANDOM:
         steps = generateRandomSteps(points);
@@ -1010,7 +938,6 @@ void MainWindow::play()
     }
 
     if (currentStepIndex >= steps.size()) {
-        // Reset to start if at end
         reset();
     }
 
@@ -1021,11 +948,10 @@ void MainWindow::play()
     runButton->setText(tr("❚❚ Pause"));
     emit playStateChanged(true);
 
-    // Start timer with adaptive FPS based on speed slider
     int speedValue = speedSlider->value();
     qreal adaptiveFPS = 30.0 + (speedValue - 1) * 7.5;
     int interval = static_cast<int>(1000.0 / adaptiveFPS);
-    interval = std::max(11, interval); // Minimum ~90 FPS
+    interval = std::max(11, interval); 
     animationTimer->start(interval);
 }
 
@@ -1053,16 +979,15 @@ void MainWindow::nextStep()
         emit stepChanged(currentStepIndex, steps.size());
     }
 
-    // 🔥 CHECK COMPLETE (QUAN TRỌNG)
     if (currentStepIndex >= steps.size())
     {
         if (animationTimer->isActive())
-            animationTimer->stop();   // 🔥 đảm bảo dừng hẳn
+            animationTimer->stop();   
 
         isPlaying = false;
 
-        setInputUIEnabled(true);      // mở UI chung
-        updateInputModeUI();          // 🔥 sync lại manual/click
+        setInputUIEnabled(true);    
+        updateInputModeUI();         
 
         runButton->setText(tr("▶ Run"));
     }
@@ -1070,7 +995,6 @@ void MainWindow::nextStep()
 
 void MainWindow::reset()
 {
-    // 🔥 Không có gì thì khỏi hỏi
     if (points.isEmpty() && steps.isEmpty() && currentStepIndex == 0)
         return;
 
@@ -1086,7 +1010,6 @@ void MainWindow::reset()
     if (reply != QMessageBox::Yes)
         return;
 
-    // ===== RESET LOGIC =====
     if (isPlaying) {
         pause();
     }
@@ -1103,36 +1026,23 @@ void MainWindow::reset()
     emit algorithmRunning(false);
 
     setInputUIEnabled(true);
-    updateInputModeUI(); // sync lại theo mode
+    updateInputModeUI(); 
 }
 
 
 void MainWindow::applyStep(const Step &step)
 {
-    // Update canvas visualization with step data:
-    // - tour: current TSP tour nodes
-    // - currentNode: node being processed (highlighted blue)
-    // - bestCandidate: best node found so far (highlighted green)
-    // - edge: edge being compared (highlighted yellow/red)
 
-    // Get animation duration based on step action type
     int animationDuration = step.getAnimationDuration();
 
-    // Calculate speed multiplier from slider (1-10)
-    // Speed 1 (slow): 0.5x, Speed 5 (medium): 1.0x, Speed 10 (fast): 2.0x
     qreal speedValue = speedSlider->value();
 
-    // scale lại cho dễ nhìn hơn (chậm hơn nhiều)
     qreal speedMultiplier = 0.3 + speedValue * 0.15;
-    // range: 0.45 → 1.8
 
-    // Set animation parameters in canvas
     canvasWidget->setAnimationParams(animationDuration, speedMultiplier);
 
-    // Apply the entire Step object to canvas (preferred: keeps rendering logic in UI)
     canvasWidget->setStep(step);
 
-    // Update pseudo-code popup with context
     if (pseudoPopup) {
         pseudoPopup->setAlgorithm(currentAlgorithm);
         pseudoPopup->updateForStep(step);
@@ -1149,17 +1059,14 @@ void MainWindow::updateInfoPanel()
     if (currentStepIndex > 0 && currentStepIndex <= steps.size()) {
         const Step &step = steps[currentStepIndex - 1];
 
-        // Display cost value
         costLabel->setText(tr("Cost: %1").arg(step.value, 0, 'f', 2));
 
-        // Display current step position
         stepLabel->setText(tr("Step: %1/%2").arg(currentStepIndex).arg(steps.size()));
 
-        // Display action type
         QString actionStr = stepActionToString(step.action);
         timeLabel->setText(tr("Action: %1").arg(actionStr));
-    } else {
-        // Reset display when no steps
+    } 
+    else {
         costLabel->setText(tr("Cost: -"));
         stepLabel->setText(tr("Step: -"));
         timeLabel->setText(tr("Action: -"));
@@ -1169,7 +1076,6 @@ void MainWindow::updateInfoPanel()
 
 void MainWindow::setupStyles()
 {
-    // ===== FONT SETUP =====
     QFont buttonFont("Tahoma", 10);
     buttonFont.setBold(true);
 
@@ -1181,8 +1087,6 @@ void MainWindow::setupStyles()
     setWindowTitle(tr("TSP Visualizer"));
 
     QString globalStyle = R"(
-
-        /* ================= ROOT ================= */
 
         QMainWindow {
             background: #121417;
@@ -1202,8 +1106,6 @@ void MainWindow::setupStyles()
             border: 1px solid #2f3747;
         }
 
-        /* ================= LABEL ================= */
-
         QLabel {
             color: #e5e7eb;
             font-size: 13px;
@@ -1219,7 +1121,6 @@ void MainWindow::setupStyles()
             padding: 4px 8px;
         }
 
-        /* 🔥 FIX LEGEND (QUAN TRỌNG NHẤT) */
         #legendBar {
             background: rgba(15,20,30,0.9);
             border-radius: 18px;
@@ -1234,8 +1135,6 @@ void MainWindow::setupStyles()
             padding: 0px;
             border-radius: 0px;
         }
-
-        /* ================= INPUT ================= */
 
         QLineEdit {
             background: #1f242f;
@@ -1254,8 +1153,6 @@ void MainWindow::setupStyles()
             border: 1px solid #38bdf8;
             background: #262d3a;
         }
-
-        /* ================= COMBO + SLIDER ================= */
 
         QComboBox, QSlider {
             background: #1f242f;
@@ -1289,8 +1186,6 @@ void MainWindow::setupStyles()
             border: none;
             margin: 0px 4px 0px 0px;
         }
-
-        /* ================= BUTTON ================= */
 
         QPushButton {
             background: #3a3f4b;
@@ -1327,8 +1222,6 @@ void MainWindow::setupStyles()
             color: #0f172a;
         }
 
-        /* ================= SLIDER ================= */
-
         QSlider::groove:horizontal {
             background: #2a3141;
             height: 8px;
@@ -1348,8 +1241,6 @@ void MainWindow::setupStyles()
             background: #5a9199;
         }
 
-        /* ================= GRAPH ================= */
-
         QGraphicsView {
             border: 1px solid #2d3340;
             border-radius: 12px;
@@ -1363,7 +1254,7 @@ void MainWindow::setupStyles()
         }
 
         QSlider::sub-page:horizontal {
-            background: #38bdf8;   /* 🔥 phần sáng */
+            background: #38bdf8;   
             border-radius: 3px;
         }
 
@@ -1377,11 +1268,9 @@ void MainWindow::setupStyles()
             border: 2px solid #38bdf8;
             width: 14px;
             height: 14px;
-            margin: -5px 0;   /* canh giữa */
+            margin: -5px 0;   
             border-radius: 7px;
         }
-
-        /* ===== DISABLED STATE ===== */
 
         QPushButton:disabled {
             background: #1a1f2a;
@@ -1445,11 +1334,9 @@ void MainWindow::setupStyles()
 
     setStyleSheet(globalStyle);
 
-    // ===== OBJECT NAME =====
     controlPanel->setObjectName("controlPanel");
     infoPanel->setObjectName("infoPanel");
 
-    // ===== FONT APPLY =====
     generateButton->setFont(buttonFont);
     runButton->setFont(buttonFont);
     stepButton->setFont(buttonFont);
@@ -1466,13 +1353,11 @@ void MainWindow::setupStyles()
     stepLabel->setFont(labelFont);
     speedLabel->setFont(titleFont);
 
-    // ===== SPEED LABEL =====
     connect(speedSlider, &QSlider::valueChanged, this, [this](int value) {
         double speed = 0.5 + 0.5 * (value - 1);
         speedLabel->setText(tr("Speed: %1x").arg(speed, 0, 'f', 1));
     });
 
-    // ===== GLOW EFFECT =====
     applyGlowEffect(generateButton);
     applyGlowEffect(runButton);
     applyGlowEffect(stepButton);
@@ -1493,11 +1378,10 @@ void MainWindow::applyGlowEffect(QPushButton* btn)
 
     btn->setGraphicsEffect(glow);
 
-    // Animation: pulse glow
     auto anim = new QPropertyAnimation(glow, "blurRadius", btn);
     anim->setDuration(220);
     anim->setStartValue(8);
-    anim->setKeyValueAt(0.5, 28);  // 👈 peak glow
+    anim->setKeyValueAt(0.5, 28);  
     anim->setEndValue(8);
     anim->setEasingCurve(QEasingCurve::OutCubic);
 
@@ -1505,9 +1389,6 @@ void MainWindow::applyGlowEffect(QPushButton* btn)
         anim->stop();
         anim->start();
     });
-
-
-
 }
 
 
@@ -1526,7 +1407,6 @@ void MainWindow::resizeEvent(QResizeEvent *event)
 
     const int margin = 20;
 
-    // ===== PSEUDO POPUP (bottom-right) =====
     if (pseudoPopup)
     {
         int w = pseudoPopup->width();
@@ -1538,7 +1418,6 @@ void MainWindow::resizeEvent(QResizeEvent *event)
         pseudoPopup->move(x, y);
     }
 
-    // ===== DP POPUP (above pseudo popup) =====
     if (dpPopup)
     {
         int w = dpPopup->width();
@@ -1555,7 +1434,6 @@ void MainWindow::resizeEvent(QResizeEvent *event)
         dpPopup->move(x, y);
     }
 
-    // ===== LEGEND BAR (top-center) =====
     if (legendBar)
     {
         int w = 420;
@@ -1616,7 +1494,7 @@ void MainWindow::setInputUIEnabled(bool enabled)
     inputY->setEnabled(enabled);
     addPointButton->setEnabled(enabled);
 
-    algorithmCombo->setEnabled(enabled); // 🔥 QUAN TRỌNG
+    algorithmCombo->setEnabled(enabled); 
 }
 
 
@@ -1625,11 +1503,9 @@ void MainWindow::updateInputModeUI()
     bool isClick = clickModeButton->isChecked();
     bool isManual = inputModeButton->isChecked();
 
-    // manual form
     inputX->setEnabled(isManual);
     inputY->setEnabled(isManual);
     addPointButton->setEnabled(isManual);
 
-    // canvas click
-    canvasWidget->setEnabled(isClick); // 🔥 chỉ click mode mới click được
+    canvasWidget->setEnabled(isClick);
 }
