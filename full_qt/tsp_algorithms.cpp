@@ -17,12 +17,10 @@ double calculateTourCost(const QVector<QPointF> &points, const QVector<int> &tou
     if (tour.size() < 2)
         return cost;
 
-    // ===== PATH COST =====
     for (int i = 0; i < tour.size() - 1; ++i) {
         cost += calculateDistance(points[tour[i]], points[tour[i + 1]]);
     }
 
-    // ===== ONLY CLOSE WHEN COMPLETE =====
     if (tour.size() == points.size()) {
         cost += calculateDistance(points[tour.last()], points[tour.first()]);
     }
@@ -40,26 +38,23 @@ QVector<Step> generateRandomSteps(const QVector<QPointF> &points)
 
     QVector<int> path;
 
-    // INIT
     Step initStep;
     initStep.action = StepAction::SELECT_NODE;
     initStep.tour = path;
     initStep.debugInfo = "init random";
     steps.push_back(initStep);
 
-    // Start from a random node
     if (unpicked.isEmpty()) return steps;
     int startIdx = QRandomGenerator::global()->bounded(unpicked.size());
     int current = unpicked.takeAt(startIdx);
     path.append(current);
 
     while (!unpicked.isEmpty()) {
-        // Candidate step: all valid next edges from current to unpicked
         Step candidateStep;
         candidateStep.action = StepAction::COMPARE_EDGE;
         candidateStep.tour = path;
         candidateStep.currentNode = current;
-        candidateStep.selected_edges = {}; // none selected yet
+        candidateStep.selected_edges = {};
         candidateStep.rejected_edges = {};
         for (int v : unpicked) {
             candidateStep.candidate_edges.append(qMakePair(current, v));
@@ -67,11 +62,9 @@ QVector<Step> generateRandomSteps(const QVector<QPointF> &points)
         candidateStep.debugInfo = "highlight possible moves";
         steps.push_back(candidateStep);
 
-        // Randomly pick one
         int pickIdx = QRandomGenerator::global()->bounded(unpicked.size());
         int chosen = unpicked.takeAt(pickIdx);
 
-        // Selected step: chosen edge becomes selected
         Step selStep;
         selStep.action = StepAction::UPDATE_BEST;
         selStep.tour = path;
@@ -80,7 +73,6 @@ QVector<Step> generateRandomSteps(const QVector<QPointF> &points)
         selStep.debugInfo = "randomly selecting next node";
         steps.push_back(selStep);
 
-        // Rejected step: all other candidate edges are rejected
         Step rejStep;
         rejStep.action = StepAction::VISIT_NODE;
         rejStep.tour = path;
@@ -91,11 +83,9 @@ QVector<Step> generateRandomSteps(const QVector<QPointF> &points)
         rejStep.debugInfo = "others rejected";
         steps.push_back(rejStep);
 
-        // commit move
         path.append(chosen);
         current = chosen;
 
-        // Visit/insert step: update tour
         Step visitStep;
         visitStep.action = StepAction::INSERT_NODE;
         visitStep.tour = path;
@@ -105,7 +95,6 @@ QVector<Step> generateRandomSteps(const QVector<QPointF> &points)
         steps.push_back(visitStep);
     }
 
-    // COMPLETE
     Step completeStep;
     completeStep.action = StepAction::COMPLETE;
     completeStep.tour = path;
@@ -129,7 +118,6 @@ QVector<Step> generateGreedySteps(const QVector<QPointF> &points)
     path.append(start);
     unvisited.remove(start);
 
-    // SELECT_NODE for start
     Step startStep;
     startStep.action = StepAction::SELECT_NODE;
     startStep.tour = path;
@@ -140,7 +128,6 @@ QVector<Step> generateGreedySteps(const QVector<QPointF> &points)
     while (!unvisited.isEmpty()) {
         int cur = path.last();
 
-        // 1) Candidate step: highlight all edges from cur -> unvisited
         Step candidateStep;
         candidateStep.action = StepAction::COMPARE_EDGE;
         candidateStep.tour = path;
@@ -151,7 +138,6 @@ QVector<Step> generateGreedySteps(const QVector<QPointF> &points)
         candidateStep.debugInfo = "Evaluating neighbors of current node";
         steps.push_back(candidateStep);
 
-        // Find nearest
         double minDist = std::numeric_limits<double>::max();
         int next = -1;
         for (int v : unvisited) {
@@ -162,7 +148,6 @@ QVector<Step> generateGreedySteps(const QVector<QPointF> &points)
             }
         }
 
-        // 2) Select step: chosen edge moves to selected_edges
         Step selectStep;
         selectStep.action = StepAction::UPDATE_BEST;
         selectStep.tour = path;
@@ -172,7 +157,6 @@ QVector<Step> generateGreedySteps(const QVector<QPointF> &points)
         selectStep.debugInfo = "Selecting shortest edge";
         steps.push_back(selectStep);
 
-        // 3) Reject step: others marked rejected
         Step rejectStep;
         rejectStep.action = StepAction::VISIT_NODE;
         rejectStep.tour = path;
@@ -184,11 +168,9 @@ QVector<Step> generateGreedySteps(const QVector<QPointF> &points)
         rejectStep.debugInfo = "Non-optimal choices rejected";
         steps.push_back(rejectStep);
 
-        // Commit move
         path.append(next);
         unvisited.remove(next);
 
-        // Visit node step
         Step visitStep;
         visitStep.action = StepAction::INSERT_NODE;
         visitStep.tour = path;
@@ -198,7 +180,6 @@ QVector<Step> generateGreedySteps(const QVector<QPointF> &points)
         steps.push_back(visitStep);
     }
 
-    // COMPLETE
     Step completeStep;
     completeStep.action = StepAction::COMPLETE;
     completeStep.tour = path;
@@ -220,7 +201,6 @@ QVector<Step> generateNearestInsertionSteps(const QVector<QPointF> &points)
         unvisited.insert(i);
 
     if (points.size() < 2) {
-        // trivial
         Step s;
         s.action = StepAction::COMPLETE;
         s.tour = tour;
@@ -228,7 +208,6 @@ QVector<Step> generateNearestInsertionSteps(const QVector<QPointF> &points)
         return steps;
     }
 
-    // ===== INIT with first two nodes =====
     int a = 0, b = 1;
     tour = {a, b};
     unvisited.remove(a);
@@ -250,11 +229,9 @@ QVector<Step> generateNearestInsertionSteps(const QVector<QPointF> &points)
 
     while (!unvisited.isEmpty()) {
 
-        // PHASE A: choose node closest to tour
         double minDist = std::numeric_limits<double>::max();
         int bestNode = -1;
 
-        // Build candidate edges from every unvisited node to the tour (for UI highlight)
         Step candidateSelect;
         candidateSelect.action = StepAction::SELECT_NODE;
         candidateSelect.tour = tour;
@@ -274,7 +251,6 @@ QVector<Step> generateNearestInsertionSteps(const QVector<QPointF> &points)
         candidateSelect.debugInfo = "Selecting closest node to tour";
         steps.push_back(candidateSelect);
 
-        // PHASE B: evaluate insertion positions
         double bestCost = std::numeric_limits<double>::max();
         int bestPos = -1;
 
@@ -286,7 +262,6 @@ QVector<Step> generateNearestInsertionSteps(const QVector<QPointF> &points)
                 calculateDistance(points[bestNode], points[tour[j]]) -
                 calculateDistance(points[tour[i]], points[tour[j]]);
 
-            // For UI, candidate insertion positions are represented as candidate edges (i->j)
             Step insertionCompare;
             insertionCompare.action = StepAction::COMPARE_EDGE;
             insertionCompare.tour = tour;
@@ -311,7 +286,6 @@ QVector<Step> generateNearestInsertionSteps(const QVector<QPointF> &points)
             }
         }
 
-        // Perform insertion
         tour.insert(bestPos + 1, bestNode);
         unvisited.remove(bestNode);
 
@@ -321,7 +295,7 @@ QVector<Step> generateNearestInsertionSteps(const QVector<QPointF> &points)
         insertStep.currentNode = bestNode;
         insertStep.value = calculateTourCost(points, tour);
         insertStep.debugInfo = "Insert node into tour";
-        // mark new selected edges (entire tour as selected for clarity)
+        
         for (int i = 0; i < tour.size(); ++i) {
             int j = (i + 1) % tour.size();
             insertStep.selected_edges.append(qMakePair(tour[i], tour[j]));
@@ -329,7 +303,6 @@ QVector<Step> generateNearestInsertionSteps(const QVector<QPointF> &points)
         steps.push_back(insertStep);
     }
 
-    // COMPLETE
     Step completeStep;
     completeStep.action = StepAction::COMPLETE;
     completeStep.tour = tour;
@@ -395,7 +368,6 @@ QVector<Step> generateBranchAndBoundSteps(const QVector<QPointF> &points)
 
     if (n == 0) return steps;
 
-    // ===== START =====
     path.append(0);
     visited.insert(0);
 
@@ -406,10 +378,8 @@ QVector<Step> generateBranchAndBoundSteps(const QVector<QPointF> &points)
     start.debugInfo = "Start Branch & Bound";
     steps.push_back(start);
 
-    // ===== DFS =====
     std::function<void()> dfs = [&]() {
 
-        // ===== COMPLETE TOUR =====
         if (path.size() == n)
         {
             double cost = calculateTourCost(points, path);
@@ -437,9 +407,6 @@ QVector<Step> generateBranchAndBoundSteps(const QVector<QPointF> &points)
             return;
         }
 
-        // ===== TRY EXPAND =====
-
-        // 🔥 STEP 3: build + sort candidates
         QVector<int> candidates;
         for (int i = 0; i < n; ++i)
         {
@@ -456,13 +423,10 @@ QVector<Step> generateBranchAndBoundSteps(const QVector<QPointF> &points)
 
         for (int i : candidates)
         {
-            // ===== CURRENT COST (STEP 2 FIX) =====
             double currentCost = calculatePathCost(points, path);
 
-            // ===== BOUND =====
             double bound = currentCost + estimateRemaining(points, visited);
 
-            // ===== STEP: EXPLORE =====
             Step explore;
             explore.action = StepAction::COMPARE_EDGE;
             explore.tour = path;
@@ -474,7 +438,6 @@ QVector<Step> generateBranchAndBoundSteps(const QVector<QPointF> &points)
             explore.debugInfo = "Compute bound = cost + estimate";
             steps.push_back(explore);
 
-            // ===== PRUNE =====
             if (bound >= bestCost)
             {
                 Step prune;
@@ -489,7 +452,6 @@ QVector<Step> generateBranchAndBoundSteps(const QVector<QPointF> &points)
                 continue;
             }
 
-            // ===== CHOOSE =====
             path.append(i);
             visited.insert(i);
 
@@ -509,7 +471,6 @@ QVector<Step> generateBranchAndBoundSteps(const QVector<QPointF> &points)
 
             dfs();
 
-            // ===== BACKTRACK =====
             path.removeLast();
             visited.remove(i);
 
@@ -523,7 +484,6 @@ QVector<Step> generateBranchAndBoundSteps(const QVector<QPointF> &points)
 
     dfs();
 
-    // ===== FINAL =====
     Step finalStep;
     finalStep.action = StepAction::COMPLETE;
     finalStep.tour = bestTour;
@@ -531,7 +491,6 @@ QVector<Step> generateBranchAndBoundSteps(const QVector<QPointF> &points)
     finalStep.bestCost = bestCost;
     finalStep.debugInfo = "Final optimal tour";
 
-    // 🔥 FIX CHUẨN: build edges rõ ràng cho UI
     if (bestTour.size() > 1)
     {
         for (int i = 0; i < bestTour.size(); ++i)
@@ -573,11 +532,7 @@ QVector<Step> generateSimulatedAnnealingSteps(
 
     if (n < 2)
         return steps;
-
-    // =========================================
-    // INITIAL RANDOM TOUR
-    // =========================================
-
+    
     QVector<int> currentTour =
         randomTour(n);
 
@@ -590,25 +545,13 @@ QVector<Step> generateSimulatedAnnealingSteps(
     double bestCost =
         currentCost;
 
-    // =========================================
-    // SA PARAMETERS
-    // =========================================
-
     double temperature = 1000.0;
 
     const double coolingRate = 0.95;
 
     const int iterations = 140;
 
-    // =========================================
-    // EARLY CONVERGENCE
-    // =========================================
-
     int stagnantSteps = 0;
-
-    // =========================================
-    // INIT STEP
-    // =========================================
 
     Step init;
 
@@ -633,15 +576,8 @@ QVector<Step> generateSimulatedAnnealingSteps(
 
     steps.push_back(init);
 
-    // =========================================
-    // MAIN LOOP
-    // =========================================
-
     for (int iter = 0; iter < iterations; ++iter)
     {
-        // -------------------------------------
-        // PICK 2 RANDOM POSITIONS
-        // -------------------------------------
 
         int i =
             QRandomGenerator::global()->bounded(n);
@@ -655,13 +591,8 @@ QVector<Step> generateSimulatedAnnealingSteps(
                 QRandomGenerator::global()->bounded(n);
         }
 
-        // city ids
         int cityA = currentTour[i];
         int cityB = currentTour[j];
-
-        // -------------------------------------
-        // BUILD NEIGHBOR
-        // -------------------------------------
 
         QVector<int> neighbor =
             currentTour;
@@ -676,10 +607,6 @@ QVector<Step> generateSimulatedAnnealingSteps(
 
         double delta =
             neighborCost - currentCost;
-
-        // =====================================
-        // STEP 1 : VISUALIZE SWAP ATTEMPT
-        // =====================================
 
         Step compareStep;
 
@@ -717,10 +644,6 @@ QVector<Step> generateSimulatedAnnealingSteps(
 
         steps.push_back(compareStep);
 
-        // =====================================
-        // ACCEPTANCE TEST
-        // =====================================
-
         bool acceptMove = false;
 
         if (delta < 0)
@@ -741,10 +664,6 @@ QVector<Step> generateSimulatedAnnealingSteps(
                 acceptMove = true;
             }
         }
-
-        // =====================================
-        // ACCEPT MOVE
-        // =====================================
 
         if (acceptMove)
         {
@@ -803,10 +722,6 @@ QVector<Step> generateSimulatedAnnealingSteps(
             steps.push_back(acceptStep);
         }
 
-        // =====================================
-        // REJECT MOVE
-        // =====================================
-
         else
         {
             Step rejectStep;
@@ -845,31 +760,15 @@ QVector<Step> generateSimulatedAnnealingSteps(
 
             steps.push_back(rejectStep);
         }
-
-        // =====================================
-        // COOL DOWN
-        // =====================================
+        
         stagnantSteps++;
 
         temperature *= coolingRate;
 
-        // =====================================
-        // STOP CONDITIONS
-        // =====================================
-
-        // sufficiently cooled
         if (temperature <= 0.001)
         {
             break;
         }
-
-        // converged for too long
-        // =====================================
-        // EARLY CONVERGENCE
-        // =====================================
-
-        // chỉ stop stagnation
-        // khi nhiệt đã khá thấp
 
         if (temperature < 5.0 &&
             stagnantSteps >= 40)
@@ -877,10 +776,6 @@ QVector<Step> generateSimulatedAnnealingSteps(
             break;
         }
     }
-
-    // =========================================
-    // FINAL BEST TOUR
-    // =========================================
 
     Step complete;
 
@@ -956,10 +851,6 @@ QVector<Step> generateHeldKarpSteps(const QVector<QPointF>& points)
         QVector<int>(n, -1)
         );
 
-    // =====================================
-    // INIT
-    // =====================================
-
     dp[1][0] = 0.0;
 
     Step init;
@@ -975,10 +866,6 @@ QVector<Step> generateHeldKarpSteps(const QVector<QPointF>& points)
         "Initialize DP with start node";
 
     steps.push_back(init);
-
-    // =====================================
-    // DP
-    // =====================================
 
     for (int mask = 1;
          mask < FULL;
@@ -998,7 +885,6 @@ QVector<Step> generateHeldKarpSteps(const QVector<QPointF>& points)
                  v < n;
                  ++v)
             {
-                // already visited
                 if (mask & (1 << v))
                     continue;
 
@@ -1014,10 +900,6 @@ QVector<Step> generateHeldKarpSteps(const QVector<QPointF>& points)
                 double candidate =
                     dp[mask][u] +
                     edgeCost;
-
-                // =========================
-                // COMPARE STEP
-                // =========================
 
                 Step compare;
 
@@ -1050,10 +932,6 @@ QVector<Step> generateHeldKarpSteps(const QVector<QPointF>& points)
 
                 steps.push_back(compare);
 
-                // =========================
-                // RELAX
-                // =========================
-
                 if (candidate <
                     dp[nextMask][v])
                 {
@@ -1077,10 +955,6 @@ QVector<Step> generateHeldKarpSteps(const QVector<QPointF>& points)
                     relax.edge =
                         qMakePair(u, v);
 
-                    // =====================================
-                    // DP METADATA
-                    // =====================================
-
                     relax.dpMask =
                         nextMask;
 
@@ -1099,20 +973,12 @@ QVector<Step> generateHeldKarpSteps(const QVector<QPointF>& points)
                     relax.dpNewCost =
                         candidate;
 
-                    // =====================================
-                    // BUILD CURRENT DP PATH
-                    // =====================================
-
                     QVector<int> partialPath =
                         reconstructHeldKarpPath(
                             mask,
                             u,
                             parent
                             );
-
-                    // =====================================
-                    // VISUALIZE CURRENT SUBPATH
-                    // =====================================
 
                     for (int i = 0;
                          i + 1 < partialPath.size();
@@ -1125,10 +991,6 @@ QVector<Step> generateHeldKarpSteps(const QVector<QPointF>& points)
                                 )
                             );
                     }
-
-                    // =====================================
-                    // SHOW EXPANSION EDGE
-                    // =====================================
 
                     relax.candidate_edges.append(
                         qMakePair(u, v)
@@ -1154,10 +1016,6 @@ QVector<Step> generateHeldKarpSteps(const QVector<QPointF>& points)
                 }
                 else
                 {
-                    // =====================
-                    // REJECT STEP
-                    // =====================
-
                     Step reject;
 
                     reject.action =
@@ -1187,10 +1045,6 @@ QVector<Step> generateHeldKarpSteps(const QVector<QPointF>& points)
             }
         }
     }
-
-    // =====================================
-    // FIND BEST END
-    // =====================================
 
     int finalMask =
         FULL - 1;
@@ -1245,10 +1099,6 @@ QVector<Step> generateHeldKarpSteps(const QVector<QPointF>& points)
         }
     }
 
-    // =====================================
-    // RECONSTRUCT PATH
-    // =====================================
-
     QVector<int> path;
 
     int mask =
@@ -1268,10 +1118,6 @@ QVector<Step> generateHeldKarpSteps(const QVector<QPointF>& points)
 
         cur = prev;
     }
-
-    // =====================================
-    // COMPLETE TOUR
-    // =====================================
 
     Step complete;
 
