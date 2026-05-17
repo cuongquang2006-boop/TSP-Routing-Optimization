@@ -260,49 +260,6 @@ void GraphCanvas::clearPoints()
     update();
 }
 
-// void GraphCanvas::clearPoints()
-// {
-//     points.clear();
-
-//     edges.clear();
-
-//     currentTour.clear();
-
-//     committedEdges.clear();
-
-//     step_candidate_edges.clear();
-
-//     step_selected_edges.clear();
-
-//     step_rejected_edges.clear();
-
-//     highlightedNode = -1;
-
-//     bestNode = -1;
-
-//     highlightedEdge =
-//         qMakePair(-1, -1);
-
-//     currentTemperature = -1.0;
-
-//     currentBestCost = -1.0;
-
-//     showTemperatureHUD = false;
-
-//     activeParticles.clear();
-
-//     currentProgress = 0.0;
-
-//     elapsedTimeMs = 0.0;
-
-//     if (particleUpdateTimer->isActive())
-//     {
-//         particleUpdateTimer->stop();
-//     }
-
-//     update();
-// }
-
 void GraphCanvas::setTour(
     const QVector<int> &tour,
     int currentNode,
